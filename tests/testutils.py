@@ -44,3 +44,17 @@ class FakeRedisCustom(FakeRedis):
         elif script == ExtensibleRedlock.extend_script:
             if self.get(args[0]) == args[1]:
                 return self.expire(args[0], args[2])
+
+
+def get_servers_pool(active, inactive):
+    redis_servers = []
+
+    for i in range(inactive):
+        server_name = "server%s.inactive" % i
+        redis_servers.append({"host": server_name, "port": 6379, 'db': server_name})
+
+    for i in range(active):
+        server_name = "server%s.active" % i
+        redis_servers.append({"host": server_name, "port": 6379, 'db': server_name})
+
+    return redis_servers

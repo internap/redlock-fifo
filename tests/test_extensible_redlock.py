@@ -21,10 +21,10 @@ from mock import patch
 from redlock import Redlock, Lock
 from redlock_fifo.extensible_redlock import ExtensibleRedlock
 
-from testutils import FakeRedisCustom
+from testutils import FakeRedisCustom, get_servers_pool
 
 
-class RedlockTest(unittest.TestCase):
+class ExtensibleRedlockTest(unittest.TestCase):
 
     @patch('redis.StrictRedis', new=FakeRedisCustom)
     def setUp(self):
@@ -129,15 +129,3 @@ class RedlockTest(unittest.TestCase):
             self.assertEqual(server.get('shorts'), lock.key)
 
 
-def get_servers_pool(active, inactive):
-    redis_servers = []
-
-    for i in range(inactive):
-        server_name = "server%s.inactive" % i
-        redis_servers.append({"host": server_name, "port": 6379, 'db': server_name})
-
-    for i in range(active):
-        server_name = "server%s.active" % i
-        redis_servers.append({"host": server_name, "port": 6379, 'db': server_name})
-
-    return redis_servers
