@@ -8,3 +8,12 @@ install:
   - pip install -r test-requirements.txt
 
 script: nosetests
+
+deploy:
+  provider: pypi
+  user: internaphosting
+  password:
+    secure: eNfBrqsfRF8gATEPqUGKhZUpVZV6gHcXT0xJbt7NC80nxZA7D50aQ41oejS5QIk6+7LmlU8K3I117+IRiP86sqXK2zNhsPKt6LjWjmICWr6xhVF25WOQOf+WFIw0bJp0qE4C29QhJdB0uSJikzonAXF1A2qyMNIclHg6iHbxsWZyUuFDC5mGQZadC44csI8yBh4/UNULL6B8W8d8OFn2q8zhdkpPGQmoisnZ2y3HR+i4S2b4jajLVr6Jpw11EZHb/osv3gZ1mQvTOcGOppK2pvR9aEgcMc9MplzGkqcKETV3RTqJrSd9izjxGIapS0xQr6n6JOSgyYwLWttzxMAE1JT8wkKkRLNQmNU/MYvtiOeTFHnGJDLgLX4FkAO9KFOpXuMyHIC5w+c9sFCrwZngqlpDhuF83D2mxW1JvIodrHKXrtltsz080rVmDq5HTiW1VzSEUDnV8ZAku/VInF+NFQJsuQWhAtzzqm/Pkvq2qeBDjrDCS8oeGdehrRM0M/uFcRtna1y2pBzaRJ/ewcYmEY8vAj4R5+X4KpNgSzLNN37Uqo7twmkN7OLSw1ixKK8KMt4LvkGKt/rI50wbmiuZfpkEXWG42zpHiIutd67nQOCwU1FVN6S/cr0dO82UpfY/DKBW++dNIWYbi0H8TqVfrxZqxIvRD647JYbFuNV6N9A=
+  on:
+    tags: true
+    repo: internap/redlock-fifo
