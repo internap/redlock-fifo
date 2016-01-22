@@ -6,22 +6,20 @@ Redlock-Fifo
 
 Redlock-Fifo makes [Redlock-py](https://github.com/SPSCommerce/redlock-py) usable in a multi-threaded environment.
 
-The project make sure that the requester for a lock will have it according to the order it asked for access. It also 
+This project makes sure that the requester will acquire a lock according to the order it is asked for. It also 
 adds the ability to extends a lock without having to release the lock.
 
 Why would I use this ?
 ----------------------
-The normal behavior of redlock-py is to `return false` on a existing lock. The mainstream approach is to 
-poll the lock until acquisition. This process has two downsides :
+The normal behavior of redlock-py is to `return false` on an existing lock. The mainstream approach is to 
+poll the lock until acquisition. This process has two downsides:
 
-1. It doesn't warranty that the first requester will be the first to get the lock.
-2. It doesn't warranty an access to the resource (a requester can wait indefenitely).
+1. It doesn't guarantee that the first requester will be the first to get the lock.
+2. It doesn't guarantee access to the resource (a requester can wait indefenitely).
 
 To prevent [starvation](https://en.wikipedia.org/wiki/Starvation_%28computer_science%29), we add a simple FIFO queue 
-implemented in Redis managing access to the resource. This queue allows us to warranty access to a resource and warranty
- that the lock will be attribued in order of lock request.
-
-You can use this project in multi-threaded environment to prevent process starvation and warranty order of execution.
+implemented in Redis, managing access to the resource. This queue allows us to guarantee access to a resource and guarantee
+ that the lock will be executed in order of lock request.
 
 Requirements
 ------------
@@ -66,7 +64,7 @@ These tests make sure that the lock algorithm is reliable.
 
 Contributors
 ------------
-Feel free raise issues and send some pull request, we'll be happy to look at them!
+Feel free to raise issues and send some pull request, we'll be happy to look at them!
 
 License
 -------
