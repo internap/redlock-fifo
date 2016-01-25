@@ -6,6 +6,7 @@ import redlock
 from redlock_fifo.fifo_redlock import FIFORedlock
 import test_extensible_redlock
 from testutils import FakeRedisCustom, get_servers_pool
+import random
 
 
 class FIFORedlockTest(test_extensible_redlock.ExtensibleRedlockTest):
@@ -26,7 +27,7 @@ class FIFORedlockTest(test_extensible_redlock.ExtensibleRedlockTest):
             lock = lock_source.lock(resource_name, 10000)
             if lock:
                 output.append(thread_name)
-                sleep(delay_before_releasing_lock)
+                sleep(delay_before_releasing_lock * random.uniform(0.1, 1.0))
                 lock_source.unlock(lock)
         connector = FIFORedlock(get_servers_pool(active=1, inactive=0))
 
