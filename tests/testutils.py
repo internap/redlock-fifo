@@ -16,6 +16,8 @@ from fakeredis import FakeRedis
 import redis
 from redlock import Redlock
 from redlock_fifo.extensible_redlock import ExtensibleRedlock
+from time import time
+import threading
 
 
 class FakeRedisCustom(FakeRedis):
@@ -58,3 +60,25 @@ def get_servers_pool(active, inactive):
         redis_servers.append({"host": server_name, "port": 6379, 'db': server_name})
 
     return redis_servers
+
+
+class ThreadCollection(object):
+    def __init__(self):
+        self.threads = []
+
+    def start(self, target, *args):
+        thread = threading.Thread(target=target, args=args)
+        thread.start()
+        self.threads.append(thread)
+
+    def join(self):
+        for t in self.threads:
+            t.join()
+
+
+class TestTimer(object):
+    def __init__(self):
+        self.elapsed = time()
+
+    def get_elapsed(self):
+        return time()-self.elapsed
