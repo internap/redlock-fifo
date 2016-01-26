@@ -7,7 +7,7 @@ Redlock-Fifo
 Redlock-Fifo makes [Redlock-py](https://github.com/SPSCommerce/redlock-py) usable in a multi-threaded environment.
 
 This project makes sure that the requester will acquire a lock according to the order it is asked for. It also 
-adds the ability to extends a lock without having to release the lock.
+adds the ability to extend a lock without having to release the lock.
 
 Why would I use this ?
 ----------------------
@@ -18,8 +18,8 @@ poll the lock until acquisition. This process has two downsides:
 2. It doesn't guarantee access to the resource (a requester can wait indefenitely).
 
 To prevent [starvation](https://en.wikipedia.org/wiki/Starvation_%28computer_science%29), we add a simple FIFO queue 
-implemented in Redis, managing access to the resource. This queue allows us to guarantee access to a resource and guarantee
- that the lock will be executed in order of lock request.
+implemented in Redis, managing access to the resource. This queue allows us to guarantee access to a resource and that 
+the lock will be executed in order of lock request.
 
 Requirements
 ------------
