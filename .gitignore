@@ -2,7 +2,6 @@
 .tox
 *.egg-info
 *.egg
-.eggs/
 AUTHORS
 ChangeLog
 *.pyc

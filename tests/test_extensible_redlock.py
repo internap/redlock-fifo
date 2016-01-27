@@ -21,7 +21,7 @@ from mock import patch
 from redlock import Redlock, Lock
 from redlock_fifo.extensible_redlock import ExtensibleRedlock
 
-from testutils import FakeRedisCustom, get_servers_pool
+from tests.testutils import FakeRedisCustom, get_servers_pool
 
 
 class ExtensibleRedlockTest(unittest.TestCase):
@@ -81,7 +81,7 @@ class ExtensibleRedlockTest(unittest.TestCase):
             [...] clients that fail to acquire the majority of locks,
             to release the (partially) acquired locks ASAP [...]
         """
-        lock = self.redlock_with_50_servers_up_50_down.lock("shorts", 10000)
+        lock = self.redlock_with_50_servers_up_50_down.lock('shorts', 10000)
         self.assertEqual(lock, False)
 
         for server in self.redlock_with_50_servers_up_50_down.servers:
@@ -122,10 +122,8 @@ class ExtensibleRedlockTest(unittest.TestCase):
         self.assertEqual(len(threads_that_got_the_lock), 1)
 
     def test_a_lock_can_be_extended(self):
-        lock = self.redlock.lock("shorts", 500)
+        lock = self.redlock.lock('shorts', 500)
         self.redlock.extend(lock, 1000)
         sleep(0.6)
         for server in self.redlock.servers:
             self.assertEqual(server.get('shorts'), lock.key)
-
-

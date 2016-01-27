@@ -1,13 +1,27 @@
+# Copyright 2016 Internap
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import threading
 from time import sleep
 
 from mock import patch
 import redlock
 from redlock_fifo.fifo_redlock import FIFORedlock
-import test_extensible_redlock
-from testutils import FakeRedisCustom, get_servers_pool
 import random
 import logging
+from tests import test_extensible_redlock
+from tests.testutils import FakeRedisCustom, get_servers_pool
 
 
 class FIFORedlockTest(test_extensible_redlock.ExtensibleRedlockTest):
@@ -37,7 +51,7 @@ class FIFORedlockTest(test_extensible_redlock.ExtensibleRedlockTest):
         thread_names = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
         def get_lock_and_register(thread_name, lock_source, resource_name, output, delay_before_releasing_lock):
-            print '%s - %s' % (threading.current_thread(), thread_name)
+            print('%s - %s' % (threading.current_thread(), thread_name))
             lock = lock_source.lock(resource_name, 10000)
             if lock:
                 output.append(thread_name)

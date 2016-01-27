@@ -20,8 +20,9 @@ implemented on top of redlock to manage access to the requested lock. This queue
 Requirements
 ------------
 
- * python 2.7
- * tox
+ * python 2.7 or python 3.4
+ * redlock-py
+
 
 
 Installation
@@ -51,7 +52,7 @@ Running Tests
 
     tox -r
 
-These tests make sure that the lock algorithm is reliable.
+These tests make sure that the lock algorithm is reliable. Test suite is run against python 2.7 and python 3.4
 
 
 Contributors
