@@ -17,13 +17,6 @@ To prevent [starvation](https://en.wikipedia.org/wiki/Starvation_%28computer_sci
 implemented on top of redlock to manage access to the requested lock. This queue allows us to guarantee FIFO access to a resource.
 
 
-Requirements
-------------
-
- * python 2.7 or python 3.4
- * redlock-py
-
-
 Installation
 ------------
 

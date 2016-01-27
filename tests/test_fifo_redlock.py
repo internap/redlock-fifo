@@ -17,8 +17,6 @@ from time import sleep
 from mock import patch
 import redlock
 from redlock_fifo.fifo_redlock import FIFORedlock
-import random
-import logging
 from tests import test_extendable_redlock
 from tests.testutils import FakeRedisCustom, get_servers_pool, TestTimer, ThreadCollection
 
