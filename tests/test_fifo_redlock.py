@@ -3,11 +3,11 @@ from time import sleep
 from mock import patch
 import redlock
 from redlock_fifo.fifo_redlock import FIFORedlock
-import test_extensible_redlock
+import test_extendable_redlock
 from testutils import FakeRedisCustom, get_servers_pool, TestTimer, ThreadCollection
 
 
-class FIFORedlockTest(test_extensible_redlock.ExtensibleRedlockTest):
+class FIFORedlockTest(test_extendable_redlock.ExtendableRedlockTest):
     @patch('redis.StrictRedis', new=FakeRedisCustom)
     def setUp(self):
         self.redlock = FIFORedlock(get_servers_pool(active=1, inactive=0))
