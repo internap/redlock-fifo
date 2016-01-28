@@ -24,7 +24,6 @@ Requirements
  * redlock-py
 
 
-
 Installation
 ------------
 

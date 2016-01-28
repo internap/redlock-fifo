@@ -14,62 +14,61 @@
 
 import threading
 from time import sleep
-
 from mock import patch
 import redlock
 from redlock_fifo.fifo_redlock import FIFORedlock
 import random
 import logging
-from tests import test_extensible_redlock
-from tests.testutils import FakeRedisCustom, get_servers_pool
+from tests import test_extendable_redlock
+from tests.testutils import FakeRedisCustom, get_servers_pool, TestTimer, ThreadCollection
 
 
-class FIFORedlockTest(test_extensible_redlock.ExtensibleRedlockTest):
+class FIFORedlockTest(test_extendable_redlock.ExtendableRedlockTest):
     @patch('redis.StrictRedis', new=FakeRedisCustom)
     def setUp(self):
         self.redlock = FIFORedlock(get_servers_pool(active=1, inactive=0))
         self.redlock_with_51_servers_up_49_down = FIFORedlock(get_servers_pool(active=51, inactive=49))
         self.redlock_with_50_servers_up_50_down = FIFORedlock(get_servers_pool(active=50, inactive=50))
 
-    def test_calls_order_works_multiple_times(self):
-        """
-        This test ensures that the lock is given in right order even under different threading conditions.
-        It can be run manually to ensure the order is respected even with thread locks.
-        """
-        self.skipTest('Test too long to run ( > 800s)')
-        for i in range(0, 100):
-            logging.debug("Test run {}".format(i))
-            self.calls_are_handled_in_order()
-
-    def test_calls_order_works_one_time(self):
-        self.calls_are_handled_in_order()
-
     @patch('redis.StrictRedis', new=FakeRedisCustom)
-    def calls_are_handled_in_order(self):
-        threads_that_got_the_lock = []
-        threads = []
-        thread_names = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    def test_call_order_orchestrated(self,
+                                     critical_section=lambda lock_source, lock: None,
+                                     default_ttl=100):
+        connector = FIFORedlock(get_servers_pool(active=1, inactive=0),
+                                fifo_queue_length=3,
+                                fifo_retry_count=10,
+                                fifo_retry_delay=0,
+                                retry_delay=.1)
 
-        def get_lock_and_register(thread_name, lock_source, resource_name, output, delay_before_releasing_lock):
-            print('%s - %s' % (threading.current_thread(), thread_name))
-            lock = lock_source.lock(resource_name, 10000)
-            if lock:
-                output.append(thread_name)
-                sleep(delay_before_releasing_lock * random.uniform(0.1, 1.0))
-                lock_source.unlock(lock)
-        connector = FIFORedlock(get_servers_pool(active=1, inactive=0))
-        for t in thread_names:
-            simulate_work_delay = 0.02
-            thread = threading.Thread(target=get_lock_and_register, args=(t, connector, 'pants', threads_that_got_the_lock,
-                                      simulate_work_delay))
-            sleep(0.01)
-            thread.start()
-            threads.append(thread)
+        test_timer = TestTimer()
+        shared_memory = []
 
-        for t in threads:
-            t.join()
+        def thread_function(name, lock_source):
+            lock = lock_source.lock('test_call_order_orchestrated', ttl=default_ttl)
+            self.assertTrue(lock)
+            shared_memory.append((name, test_timer.get_elapsed()))
+            critical_section(lock_source, lock)
 
-        self.assertEqual(''.join(threads_that_got_the_lock), thread_names)
+        thread_collection = ThreadCollection()
+        thread_collection.start(thread_function, 'Thread A', connector)
+        sleep(0.05)
+        thread_collection.start(thread_function, 'Thread B', connector)
+        sleep(0.051)
+        thread_collection.start(thread_function, 'Thread C', connector)
+        thread_collection.join()
+
+        actual_order = [entry[0] for entry in shared_memory]
+        actual_times = [entry[1] for entry in shared_memory]
+        self.assertEquals(['Thread A', 'Thread B', 'Thread C'], actual_order)
+        self.assertAlmostEqual(0, actual_times[0], delta=0.03)
+        self.assertAlmostEqual(0.15, actual_times[1], delta=0.03)
+        self.assertAlmostEqual(0.3, actual_times[2], delta=0.03)
+
+    def test_call_order_orchestrated_with_unlock(self):
+        def critical_section(lock_source, lock):
+            sleep(0.1)
+            lock_source.unlock(lock)
+        self.test_call_order_orchestrated(critical_section=critical_section, default_ttl=1000)
 
     @patch('redis.StrictRedis', new=FakeRedisCustom)
     def test_locks_are_released_when_position0_could_not_be_reached(self):

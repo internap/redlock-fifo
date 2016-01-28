@@ -15,7 +15,9 @@
 from fakeredis import FakeRedis
 import redis
 from redlock import Redlock
-from redlock_fifo.extensible_redlock import ExtensibleRedlock
+from redlock_fifo.extendable_redlock import ExtendableRedlock
+from time import time
+import threading
 
 
 class FakeRedisCustom(FakeRedis):
@@ -41,9 +43,12 @@ class FakeRedisCustom(FakeRedis):
                 return self.delete(args[0])
             else:
                 return 0
-        elif script == ExtensibleRedlock.extend_script:
+        elif script == ExtendableRedlock.extend_script:
             if self.get(args[0]) == args[1]:
-                return self.expire(args[0], args[2])
+                return self.pexpire(args[0], args[2])
+
+    def pexpire(self, key, new_expiry_ms):
+        return self.expire(key, ms_to_seconds(new_expiry_ms))
 
 
 def get_servers_pool(active, inactive):
@@ -58,3 +63,32 @@ def get_servers_pool(active, inactive):
         redis_servers.append({"host": server_name, "port": 6379, 'db': server_name})
 
     return redis_servers
+
+
+class ThreadCollection(object):
+    def __init__(self):
+        self.threads = []
+
+    def start(self, target, *args):
+        thread = threading.Thread(target=target, args=args)
+        thread.start()
+        self.threads.append(thread)
+
+    def join(self):
+        for t in self.threads:
+            t.join()
+
+
+class TestTimer(object):
+    def __init__(self):
+        self.elapsed = time()
+
+    def get_elapsed(self):
+        return time()-self.elapsed
+
+def ms_to_seconds(ms):
+    return float(ms)/1000
+
+
+def seconds_to_ms(seconds):
+    return seconds*1000
