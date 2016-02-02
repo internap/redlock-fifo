@@ -22,11 +22,11 @@ import threading
 
 class FakeRedisCustom(FakeRedis):
     def __init__(self, db=0, charset='utf-8', errors='strict', **kwargs):
+        super(FakeRedisCustom, self).__init__(db, charset, errors, **kwargs)
+
         self.fail_on_communicate = False
         if 'host' in kwargs and kwargs['host'].endswith('.inactive'):
             self.fail_on_communicate = True
-
-        super(FakeRedisCustom, self).__init__(db, charset, errors, **kwargs)
 
     def set(self, name, value, ex=None, px=None, nx=False, xx=False):
         if self.fail_on_communicate:

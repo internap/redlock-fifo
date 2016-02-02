@@ -17,13 +17,6 @@ To prevent [starvation](https://en.wikipedia.org/wiki/Starvation_%28computer_sci
 implemented on top of redlock to manage access to the requested lock. This queue allows us to guarantee FIFO access to a resource.
 
 
-Requirements
-------------
-
- * python 2.7
- * tox
-
-
 Installation
 ------------
 
@@ -51,7 +44,7 @@ Running Tests
 
     tox -r
 
-These tests make sure that the lock algorithm is reliable.
+These tests make sure that the lock algorithm is reliable. Test suite is run against python 2.7 and python 3.4
 
 
 Contributors

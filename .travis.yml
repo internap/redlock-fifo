@@ -2,6 +2,7 @@ language: python
 
 python:
   - 2.7
+  - 3.4
 
 install:
   - pip install -r requirements.txt
@@ -17,3 +18,4 @@ deploy:
   on:
     tags: true
     repo: internap/redlock-fifo
+    python: 3.4

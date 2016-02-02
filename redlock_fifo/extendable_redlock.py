@@ -14,10 +14,9 @@
 
 from contextlib import contextmanager
 import logging
-from qthread.stoppable_thread import StoppableThread
 from redlock import Redlock
 import time
-
+from threading import Thread
 
 class ExtendableRedlock(Redlock):
     extend_script = """
@@ -66,17 +65,22 @@ class ExtendableRedlock(Redlock):
         self.logger.debug('[{resource}] Stopped autoextending'.format(resource=lock.resource))
 
 
-class AutoExtendableLockThread(StoppableThread):
+class AutoExtendableLockThread(Thread):
     def __init__(self, redlock, lock, every_ms, new_ttl):
         super(AutoExtendableLockThread, self).__init__()
         self.lock = lock
         self.redlock = redlock
         self.every_ms = every_ms
         self.new_ttl = new_ttl
+        self.extend = True
 
-    def mainloop(self):
-        self.redlock.extend(self.lock, self.new_ttl)
-        time.sleep(float(self.every_ms) / 1000)
+    def run(self):
+        while self.extend:
+            self.redlock.extend(self.lock, self.new_ttl)
+            time.sleep(float(self.every_ms) / 1000)
+
+    def stop(self):
+        self.extend = False
 
 class LockAutoextendAlreadyRunning(Exception):
     pass

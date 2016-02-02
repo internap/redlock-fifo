@@ -22,7 +22,7 @@ from mock import patch
 from redlock import Redlock, Lock
 from redlock_fifo.extendable_redlock import ExtendableRedlock, LockAutoextendAlreadyRunning
 
-from testutils import FakeRedisCustom, get_servers_pool, seconds_to_ms, ms_to_seconds
+from tests.testutils import FakeRedisCustom, get_servers_pool, seconds_to_ms, ms_to_seconds
 
 
 class ExtendableRedlockTest(unittest.TestCase):
