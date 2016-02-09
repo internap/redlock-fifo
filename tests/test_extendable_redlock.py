@@ -20,7 +20,7 @@ from hamcrest import assert_that, is_
 
 from mock import patch
 from redlock import Redlock, Lock
-from redlock_fifo.extendable_redlock import ExtendableRedlock, LockAutoextendAlreadyRunning
+from redlock_fifo.extendable_redlock import ExtendableRedlock
 
 from tests.testutils import FakeRedisCustom, get_servers_pool, seconds_to_ms, ms_to_seconds
 
@@ -168,52 +168,3 @@ class ExtendableRedlockTest(unittest.TestCase):
             server.delete(lock.resource)
 
         assert_that(self.redlock_with_51_servers_up_49_down.is_valid(lock), is_(False))
-
-    def test_autoextend_automatically_extends_the_lock_expiry(self):
-        lock = self.redlock_with_51_servers_up_49_down.lock('test_autoextend', 500)
-
-        with self.redlock_with_51_servers_up_49_down.autoextend(lock, every_ms=200, new_ttl=500):
-            sleep(1)
-
-            assert_that(self.redlock_with_51_servers_up_49_down.is_valid(lock), is_(True))
-
-    def test_autoextend_automatically_extends_the_lock_expiry_explicit_start_stop(self):
-        lock = self.redlock_with_51_servers_up_49_down.lock('test_autoextend', 500)
-        try:
-            self.redlock_with_51_servers_up_49_down.start_autoextend(lock, every_ms=200, new_ttl=500)
-            sleep(1)
-
-            assert_that(self.redlock_with_51_servers_up_49_down.is_valid(lock), is_(True))
-        finally:
-            self.redlock_with_51_servers_up_49_down.stop_autoextend(lock)
-
-    def test_autoextending_lock_unable_to_renew(self):
-        lock = self.redlock_with_51_servers_up_49_down.lock('test_unable_to_renew', 500)
-        with self.redlock_with_51_servers_up_49_down.autoextend(lock, every_ms=100, new_ttl=500):
-            for server in self.redlock.servers:
-                server.flushall()
-
-            sleep(1)
-
-            assert_that(self.redlock_with_51_servers_up_49_down.is_valid(lock), is_(False))
-
-    def test_autoextend_is_not_valid_if_not_refreshed_fast_enough(self):
-        lock = self.redlock.lock('test_should_raise', 150)
-        with self.redlock_with_51_servers_up_49_down.autoextend(lock, every_ms=250, new_ttl=150):
-            sleep(1)
-            assert_that(self.redlock_with_51_servers_up_49_down.is_valid(lock), is_(False))
-
-    def test_autoextend_twice_is_an_error(self):
-        lock = self.redlock_with_51_servers_up_49_down.lock('test_autoextend', 500)
-
-        with self.redlock_with_51_servers_up_49_down.autoextend(lock, every_ms=200, new_ttl=500):
-            with self.assertRaises(LockAutoextendAlreadyRunning):
-                self.redlock_with_51_servers_up_49_down.start_autoextend(lock, every_ms=200, new_ttl=500)
-
-    def test_autoextend_start_stop_start_stop(self):
-        lock = self.redlock_with_51_servers_up_49_down.lock('test_autoextend', 500)
-        with self.redlock_with_51_servers_up_49_down.autoextend(lock, every_ms=200, new_ttl=500):
-            pass
-
-        with self.redlock_with_51_servers_up_49_down.autoextend(lock, every_ms=200, new_ttl=500):
-            pass
