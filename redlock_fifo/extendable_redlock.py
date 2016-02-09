@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from contextlib import contextmanager
 import logging
 from redlock import Redlock
-
+import time
+from threading import Thread
 
 class ExtendableRedlock(Redlock):
     extend_script = """
@@ -27,6 +29,7 @@ class ExtendableRedlock(Redlock):
     def __init__(self, connection_list, retry_count=None, retry_delay=None):
         super(ExtendableRedlock, self).__init__(connection_list, retry_count, retry_delay)
         self.logger = logging.getLogger(__name__)
+        self._autoextend_threads = {}
 
     def extend_instance(self, server, resource, key, new_ttl):
         try:
@@ -40,3 +43,44 @@ class ExtendableRedlock(Redlock):
 
     def is_valid(self, lock):
         return len([s for s in self.servers if s.get(lock.resource) == lock.key]) >= self.quorum
+
+    @contextmanager
+    def autoextend(self, lock, every_ms, new_ttl):
+        self.start_autoextend(lock, every_ms, new_ttl)
+        yield
+        self.stop_autoextend(lock)
+
+    def start_autoextend(self, lock, every_ms, new_ttl):
+        self.logger.debug('[{resource}] Autoextending every {every_ms}ms with a ttl of {new_ttl}ms'.format(
+            resource=lock.resource, every_ms=every_ms, new_ttl=new_ttl))
+        if lock in self._autoextend_threads:
+            raise LockAutoextendAlreadyRunning()
+        self._autoextend_threads[lock] = AutoExtendableLockThread(self, lock, every_ms, new_ttl)
+        self._autoextend_threads[lock].start()
+
+    def stop_autoextend(self, lock):
+        self._autoextend_threads[lock].stop()
+        self._autoextend_threads[lock].join()
+        del self._autoextend_threads[lock]
+        self.logger.debug('[{resource}] Stopped autoextending'.format(resource=lock.resource))
+
+
+class AutoExtendableLockThread(Thread):
+    def __init__(self, redlock, lock, every_ms, new_ttl):
+        super(AutoExtendableLockThread, self).__init__()
+        self.lock = lock
+        self.redlock = redlock
+        self.every_ms = every_ms
+        self.new_ttl = new_ttl
+        self.extend = True
+
+    def run(self):
+        while self.extend:
+            self.redlock.extend(self.lock, self.new_ttl)
+            time.sleep(float(self.every_ms) / 1000)
+
+    def stop(self):
+        self.extend = False
+
+class LockAutoextendAlreadyRunning(Exception):
+    pass
