@@ -19,11 +19,14 @@ from redlock_fifo.extendable_redlock import ExtendableRedlock
 
 
 class FIFORedlock(ExtendableRedlock):
-    def __init__(self, connection_list, retry_count=1, retry_delay=0.2, fifo_retry_count=30, fifo_retry_delay=0.2, fifo_queue_length=64):
+    def __init__(self, connection_list, retry_count=1, retry_delay=0.2,
+                 fifo_retry_count=30, fifo_retry_delay=0.2, fifo_queue_length=64,
+                 fifo_ephemeral_ttl_ms=5000):
         super(FIFORedlock, self).__init__(connection_list, retry_count, retry_delay)
         self.fifo_retry_count = fifo_retry_count
         self.fifo_retry_delay = fifo_retry_delay
         self.fifo_queue_length = fifo_queue_length
+        self.fifo_ephemeral_ttl_ms = fifo_ephemeral_ttl_ms
         self.logger = logging.getLogger(__name__)
 
     def lock(self, resource, ttl):
@@ -45,7 +48,10 @@ class FIFORedlock(ExtendableRedlock):
             else:
                 next_position = self.fifo_queue_length
 
-            next_lock = super(FIFORedlock, self).lock(get_resource_name_with_position(resource, next_position), ttl)
+            if lock is not None:
+                super(FIFORedlock, self).extend(lock, self.fifo_ephemeral_ttl_ms)
+            next_lock_ttl = ttl if next_position is 0 else self.fifo_ephemeral_ttl_ms
+            next_lock = super(FIFORedlock, self).lock(get_resource_name_with_position(resource, next_position), next_lock_ttl)
 
             if next_lock:
                 retries = 0
